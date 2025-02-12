@@ -1,0 +1,6 @@
+openai
+tritonclient[http]
+numpy
+transformers
+pyyaml
+jupyter

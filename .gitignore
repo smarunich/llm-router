@@ -1,0 +1,10 @@
+.ipynb_checkpoints/
+*.pyc
+app/.env
+models
+src/router-controller/target/
+routers/
+.Trash-0/
+ngc-cli/
+ngc-cli.md5
+ngccli_linux.zip
