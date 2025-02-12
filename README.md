@@ -254,7 +254,7 @@ The primary modification is the inclusion of the `nim-llm-router` metadata in th
 
 The blueprint includes a variety of tools to help understand, evaluate, customize, and monitor the LLM Router.
 
-- Read more about the router controller implementation and capabilities in the source README located at `src/readme.md`.
+- Read more about the router controller implementation and capabilities in the source README located at `src/router-controller/readme.md`.
 - A sample client application is available in the `demo/app` folder.
 - Metrics are automatically collected and can be exported via Prometheus to Grafana. Details are available in the source README and an example is provided in the quickstart notebook.
 - A sample loadtest is available in the `demo/loadtest` folder with instructions in the associated README.
