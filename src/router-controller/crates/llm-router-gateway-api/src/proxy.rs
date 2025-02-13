@@ -12,7 +12,7 @@ use bytes::Bytes;
 use http_body_util::{combinators::BoxBody, BodyExt, Full};
 use hyper::body::Incoming;
 use hyper::{Method, Request, Response, Uri};
-use log::{error, info};
+use log::{debug, error, info};
 use prometheus::{gather, Encoder, TextEncoder};
 use reqwest::header::{HeaderMap, HeaderValue, ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ use std::time::Instant;
 use tokio::sync::Mutex;
 
 fn print_config(config: &RouterConfig) {
-    info!("{:#?}", config);
+    debug!("{:#?}", config);
 }
 
 fn extract_forward_uri_path_and_query(req: &Request<Incoming>) -> Result<Uri, GatewayApiError> {
@@ -78,7 +78,7 @@ async fn choose_model(
     text_input: &str,
     _threshold: f64,
 ) -> Result<usize, GatewayApiError> {
-    info!("Policy: {:#?}", &policy);
+    info!("Using policy: {}", &policy.name);
     info!("Triton input text: {:#?}", &text_input);
     let text_tensor = InferInputTensor {
         name: "INPUT".to_string(),
@@ -433,11 +433,11 @@ pub async fn proxy(
 
         let uri = format!("{}{}", api_base, forward_uri_path_and_query);
         let mut reqwest_request = client.request(method, uri).json(&json);
+        info!("reqwest_request: {reqwest_request:#?}");
 
         for (name, value) in headers.iter() {
             reqwest_request = reqwest_request.header(name, value);
         }
-        info!("reqwest_request: {reqwest_request:#?}");
 
         let llm_req_start = Instant::now();
         let reqwest_response = reqwest_request.send().await?.error_for_status()?;
