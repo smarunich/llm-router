@@ -53,6 +53,12 @@ pub enum GatewayApiError {
 
     #[error(transparent)]
     Http(#[from] http::Error),
+
+    #[error("Triton error: {0}")]
+    TritonError(String),
+
+    #[error("Invalid Triton output: {0}")]
+    InvalidTritonOutput(String),
 }
 
 #[derive(Debug, thiserror::Error)]

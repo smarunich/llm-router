@@ -9,6 +9,7 @@ use crate::metrics::{
 use crate::stream::ReqwestStreamAdapter;
 use crate::triton::{InferInputTensor, InferInputs, Output};
 use bytes::Bytes;
+use http::StatusCode;
 use http_body_util::{combinators::BoxBody, BodyExt, Full};
 use hyper::body::Incoming;
 use hyper::{Method, Request, Response, Uri};
@@ -60,7 +61,7 @@ fn get_last_message_for_triton(messages: &Messages) -> String {
     messages
         .last()
         .map(|msg| msg.content.clone())
-        .unwrap_or_else(|| "".to_string())
+        .unwrap_or_default()
 }
 
 fn shorten_string(s: &str, max_length: usize) -> String {
@@ -98,11 +99,31 @@ async fn choose_model(
     let response = client.post(url).headers(headers).json(&data).send().await?;
     info!("Triton classification response: {:#?}", response);
 
-    let response: Output = response.json().await?;
+    if !response.status().is_success() {
+        let status = response.status();
+        let error_body = response.bytes().await?;
+        error!(
+            "Triton error response: {}",
+            String::from_utf8_lossy(&error_body)
+        );
+
+        return Err(GatewayApiError::TritonError(format!(
+            "Triton service error ({}): {}",
+            status,
+            String::from_utf8_lossy(&error_body)
+        )));
+    }
+
+    // Parse successful response
+    let response: Output = response.json().await.map_err(|e| {
+        error!("Failed to parse Triton response: {:?}", e);
+        GatewayApiError::TritonError(format!("Invalid Triton response: {}", e))
+    })?;
+
     info!("Triton Output: {:#?}", response);
 
     let output_tensor = response.outputs.first().ok_or_else(|| {
-        GatewayApiError::ModelNotFound("No outputs returned from the Triton response".to_string())
+        GatewayApiError::TritonError("No outputs returned from the Triton response".to_string())
     })?;
 
     let model_index = output_tensor
@@ -112,7 +133,10 @@ async fn choose_model(
         .max_by(|&(_, a), &(_, b)| a.partial_cmp(b).unwrap())
         .map(|(idx, _)| idx)
         .ok_or_else(|| {
-            GatewayApiError::ModelNotFound("Could not find a max value in output data".to_string())
+            error!("Invalid probability distribution from Triton");
+            GatewayApiError::InvalidTritonOutput(
+                "Could not determine model selection from probability distribution".to_string(),
+            )
         })?;
 
     info!("model_index chosen by classifier: {:#?}", model_index);
@@ -361,17 +385,34 @@ pub async fn proxy(
                             "No model specified for manual routing".to_string(),
                         )
                     })?;
-                    policy
-                        .llms
-                        .iter()
-                        .position(|llm| llm.name == model)
-                        .ok_or_else(|| {
-                            GatewayApiError::PolicyNotFound(format!("Model not found: {}", model))
-                        })?
+                    match policy.llms.iter().position(|llm| llm.name == model) {
+                        Some(index) => index,
+                        None => {
+                            let error_body = format!("Model not found: {}", model);
+                            let body = Full::from(error_body.into_bytes())
+                                .map_err(|never| match never {})
+                                .boxed();
+
+                            let error_response = Response::builder()
+                                .status(StatusCode::NOT_FOUND)
+                                .header(CONTENT_TYPE, "application/json")
+                                .body(body)?;
+
+                            return Ok(error_response);
+                        }
+                    }
                 } else {
-                    return Err(GatewayApiError::ModelNotFound(
-                        "Manual routing strategy requires nim-llm-router params".to_string(),
-                    ));
+                    let error_body = "Manual routing strategy requires nim-llm-router params";
+                    let body = Full::from(error_body.to_string().into_bytes())
+                        .map_err(|never| match never {})
+                        .boxed();
+
+                    let error_response = Response::builder()
+                        .status(StatusCode::BAD_REQUEST)
+                        .header(CONTENT_TYPE, "application/json")
+                        .body(body)?;
+
+                    return Ok(error_response);
                 }
             }
             Some(RoutingStrategy::Triton) => {
@@ -381,10 +422,51 @@ pub async fn proxy(
                     .and_then(|params| params.threshold)
                     .unwrap_or(0.5);
                 let triton_text = get_last_message_for_triton(&messages);
-                let index = choose_model(&policy, &client, &triton_text, threshold).await?;
-                model_selection_time = selection_start.elapsed().as_secs_f64();
-                MODEL_SELECTION_TIME.observe(model_selection_time);
-                index
+                match choose_model(&policy, &client, &triton_text, threshold).await {
+                    Ok(index) => {
+                        model_selection_time = selection_start.elapsed().as_secs_f64();
+                        MODEL_SELECTION_TIME.observe(model_selection_time);
+                        index
+                    }
+                    Err(e) => {
+                        // Extract error details
+                        let error_body = match e {
+                            GatewayApiError::TritonError(msg)
+                            | GatewayApiError::InvalidTritonOutput(msg) => msg,
+                            _ => return Err(e),
+                        };
+
+                        // Get original status code from error message if available
+                        let status = if let Some(status_start) = error_body.find('(') {
+                            if let Some(status_end) = error_body.find(')') {
+                                if let Ok(code) =
+                                    error_body[status_start + 1..status_end].parse::<u16>()
+                                {
+                                    StatusCode::from_u16(code)
+                                        .unwrap_or(StatusCode::SERVICE_UNAVAILABLE)
+                                } else {
+                                    StatusCode::SERVICE_UNAVAILABLE
+                                }
+                            } else {
+                                StatusCode::SERVICE_UNAVAILABLE
+                            }
+                        } else {
+                            StatusCode::SERVICE_UNAVAILABLE
+                        };
+
+                        // Create error response
+                        let body = Full::from(error_body.into_bytes())
+                            .map_err(|never| match never {})
+                            .boxed();
+
+                        let error_response = Response::builder()
+                            .status(status)
+                            .header(CONTENT_TYPE, "application/json")
+                            .body(body)?;
+
+                        return Ok(error_response);
+                    }
+                }
             }
             None => {
                 return Err(GatewayApiError::NoRoutingStrategy);
@@ -440,7 +522,7 @@ pub async fn proxy(
         }
 
         let llm_req_start = Instant::now();
-        let reqwest_response = reqwest_request.send().await?.error_for_status()?;
+        let reqwest_response = reqwest_request.send().await?;
         let current_llm_resp = llm_req_start.elapsed().as_secs_f64();
         {
             let mut guard = llm_resp_time_holder.lock().await;
@@ -452,6 +534,24 @@ pub async fn proxy(
 
         let status = reqwest_response.status();
         let headers = reqwest_response.headers().clone();
+
+        // If status is not successful, pass through the error response
+        if !status.is_success() {
+            let error_body = reqwest_response.bytes().await?;
+
+            let body = Full::from(error_body)
+                .map_err(|never| match never {})
+                .boxed();
+
+            let mut error_response = Response::builder().status(status).body(body)?;
+            *error_response.headers_mut() = headers;
+            error_response.headers_mut().insert(
+                "X-Chosen-Classifier",
+                HeaderValue::from_str(&chosen_classifier).unwrap(),
+            );
+            error!("error_response: {error_response:#?}");
+            return Ok(error_response);
+        }
 
         if let Some(token_usage_val) = reqwest_response.headers().get("X-Token-Usage") {
             if let Ok(token_usage_str) = token_usage_val.to_str() {
@@ -510,17 +610,24 @@ pub async fn proxy(
     PROXY_OVERHEAD_LATENCY.observe(proxy_overhead);
 
     match &result {
-        Ok(_) => REQUEST_SUCCESS.inc(),
-        Err(err) => {
-            let err_str = err.to_string();
-            let error_type = if err_str.contains("4") {
-                "4xx"
-            } else if err_str.contains("5") {
-                "5xx"
+        Ok(response) => {
+            if response.status().is_success() {
+                REQUEST_SUCCESS.inc();
             } else {
-                "other"
-            };
-            REQUEST_FAILURE.with_label_values(&[error_type]).inc();
+                let status_code = response.status().as_u16();
+                let error_type = if (400..500).contains(&status_code) {
+                    "4xx"
+                } else if (500..600).contains(&status_code) {
+                    "5xx"
+                } else {
+                    "other"
+                };
+                REQUEST_FAILURE.with_label_values(&[error_type]).inc();
+            }
+        }
+        Err(_err) => {
+            // Handle system-level errors (non-HTTP errors)
+            REQUEST_FAILURE.with_label_values(&["system"]).inc();
         }
     }
 

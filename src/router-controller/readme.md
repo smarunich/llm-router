@@ -198,6 +198,37 @@ In the above example, the order of the LLMs under the `task_router` policy is cr
 
 The router-controller uses this one-hot encoded vector to route the prompt to the appropriate LLM based on the order specified in the config.yaml. Therefore, maintaining the correct order is essential for accurate routing.
 
+### Error Types by Routing Strategy
+
+#### Triton Routing Strategy Errors
+- `5xx`: Server-side errors
+  - Triton server unavailable (503)
+  - Router model loading failures (503)
+
+#### Manual Routing Strategy Errors
+- `4xx`: Client-side errors
+  - Model not found in policy (404)
+  - Missing model parameter (400)
+  - Invalid routing parameters (400)
+
+#### LLM Service Errors
+- Original status codes from LLM services are passed through
+  - Rate limiting (429)
+  - Service unavailable (503)
+  - Quota Unavailable (402)
+  - Other LLM-specific errors
+
+### Error Response Format
+When an error occurs, the response will contain:
+```json
+{
+  "error": {
+    "message": "Detailed error message",
+    "type": "error_type",
+    "code": status_code
+  }
+}
+```
 
 ## Metrics
 
@@ -263,6 +294,10 @@ In this example, the `stream_options` object includes the `include_usage` field 
   - **Name**: `request_failure_total`
   - **Description**: Total failed requests, broken down by error type.
   - **Labels**: `error_type`
+    - `4xx`: Client errors (e.g., invalid input, bad request)
+    - `5xx`: Server errors (e.g., internal server errors, gateway timeouts)
+    - `system`: System-level errors (e.g., network failures, connection timeouts)
+    - `other`: Unclassified errors
 
 - **Routing Policy Usage**: 
   - **Name**: `routing_policy_usage`

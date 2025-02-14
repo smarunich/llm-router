@@ -43,19 +43,22 @@ class LLMClient:
             extra_body['nim-llm-router']["model"] = model
         
         logging.info(extra_body)
-
         logging.info("self.client.chat.completions.create")
 
-        response = self.client.chat.completions.with_raw_response.create(
-            model="",
-            messages=history_openai_format,
-            temperature=0.5,
-            top_p=1,
-            max_tokens=1024,
-            stream=True,
-            stream_options={"include_usage": True},
-            extra_body=extra_body,
-        )
+        try:
+            response = self.client.chat.completions.with_raw_response.create(
+                model="",
+                messages=history_openai_format,
+                temperature=0.5,
+                top_p=1,
+                max_tokens=1024,
+                stream=True,
+                stream_options={"include_usage": True},
+                extra_body=extra_body,
+            )
+        except Exception as e:
+            logging.error(f"API error: {str(e)}")
+            return
         # Get headers before parsing the stream
         chosen_classifier = response.headers.get('X-Chosen-Classifier')
         if chosen_classifier:

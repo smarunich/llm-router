@@ -27,11 +27,20 @@ def handle_non_streaming():
     """Handle non-streaming completion with usage reporting"""
     print("\n=== Non-Streaming Mode ===")
     
-    chat_completion = client.chat.completions.with_raw_response.create(
+    try:
+        chat_completion = client.chat.completions.with_raw_response.create(
         messages=messages,
         model="",
         extra_body=extra_body
-    )
+        )
+    except Exception as e:
+        print("\nError Response:")
+        if hasattr(e, 'response'):
+            print(f"Status Code: {e.response.status_code}")
+            print(f"Error Message: {e.response.text}")
+        else:
+            print(f"Error: {str(e)}")
+
 
     # Print classifier info
     chosen_classifier = chat_completion.headers.get('X-Chosen-Classifier')
@@ -55,13 +64,22 @@ def handle_streaming():
     """Handle streaming completion with usage reporting"""
     print("\n=== Streaming Mode ===")
     
-    chat_completion = client.chat.completions.with_raw_response.create(
-        messages=messages,
-        model="",
-        stream=True,
-        stream_options={"include_usage": True},
-        extra_body=extra_body
-    )
+    try:
+        chat_completion = client.chat.completions.with_raw_response.create(
+            messages=messages,
+            model="",
+            stream=True,
+            stream_options={"include_usage": True},
+            extra_body=extra_body
+        )
+    except Exception as e:
+        print("\nError Response:")
+        if hasattr(e, 'response'):
+            print(f"Status Code: {e.response.status_code}")
+            print(f"Error Message: {e.response.text}")
+        else:
+            print(f"Error: {str(e)}")
+
 
     # Print classifier info
     chosen_classifier = chat_completion.headers.get('X-Chosen-Classifier')

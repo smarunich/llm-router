@@ -50,22 +50,29 @@ class APIUser(HttpUser):
         }
 
         with self.client.post("/v1/chat/completions", json=data, catch_response=True) as response:
-            if response.status_code == 200:
-                chat_completion = response.json()
-                usage = chat_completion.get("usage")
-                model = chat_completion.get("model")
-                
-                usage_tokens = UsageTokens(
-                    prompt_tokens=usage.get("prompt_tokens"),
-                    completion_tokens=usage.get("completion_tokens"),
-                    total_tokens=usage.get("total_tokens")
-                )
-                
-                event_hook.fire(usage_tokens=usage_tokens, model=model)
-                request_counter.labels(endpoint="/v1/chat/completions", model=model).inc()
-                latency_gauge.labels(endpoint="/v1/chat/completions").set(response.elapsed.total_seconds())
-            else:
-                response.failure(f"Request failed with status code: {response.status_code}")
-
+            try:
+                if response.status_code == 200:
+                    chat_completion = response.json()
+                    usage = chat_completion.get("usage")
+                    model = chat_completion.get("model")
+                    
+                    usage_tokens = UsageTokens(
+                        prompt_tokens=usage.get("prompt_tokens"),
+                        completion_tokens=usage.get("completion_tokens"),
+                        total_tokens=usage.get("total_tokens")
+                    )
+                    
+                    event_hook.fire(usage_tokens=usage_tokens, model=model)
+                    request_counter.labels(endpoint="/v1/chat/completions", model=model).inc()
+                    latency_gauge.labels(endpoint="/v1/chat/completions").set(response.elapsed.total_seconds())
+                else:
+                    error_msg = f"Request failed with status {response.status_code}"
+                    try:
+                        error_msg += f": {response.json()}"
+                    except:
+                        error_msg += f": {response.text}"
+                    response.failure(error_msg)
+            except Exception as e:
+                response.failure(f"Exception during request: {str(e)}")
 # Start Prometheus metrics server
 start_http_server(4000, addr='0.0.0.0')
