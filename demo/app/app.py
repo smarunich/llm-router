@@ -99,14 +99,15 @@ with gr.Blocks(theme=theme, css=css) as chat:
             choices=list_routing_strategy(), 
             label="Select the Routing Strategy", 
             min_width=50, 
-            scale=1
+            scale=1, 
+            value="triton"
         )
         policy_dropdown = gr.Dropdown(
-            choices=[],
+            choices=["task_router"],
             label="Select a Routing Policy",
             min_width=50,
             scale=1,
-            visible=False
+            value="task_router"
         )
         model_dropdown = gr.Dropdown(
             choices=[],
@@ -125,7 +126,6 @@ with gr.Blocks(theme=theme, css=css) as chat:
         inputs=[policy_dropdown, routing_strategy],
         outputs=[model_dropdown]
     )
-
 
     chat_interface = gr.ChatInterface(
         fn=client.predict,
