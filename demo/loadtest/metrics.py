@@ -13,22 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from locust import HttpUser, task, between, SequentialTaskSet
-from tasks import ChatCompletionTask
-from metrics import start_metrics_server
+from prometheus_client import start_http_server, Gauge, Counter
 
-class ChatWorkflow(SequentialTaskSet):
-    @task(1)
-    def chat_completion(self):
-        ChatCompletionTask(self.client).execute()
+# Prometheus metrics
+request_counter = Counter('http_requests_total', 'Total requests made', ['endpoint', 'model'])
+latency_gauge = Gauge('request_latency_seconds', 'Request latency', ['endpoint'])
+tokens_counter = Counter('tokens_total', 'Total tokens used', ['model', 'type'])
+error_counter = Counter('http_errors_total', 'Total error responses', ['endpoint', 'error_type'])
 
-class APIUser(HttpUser):
-    wait_time = between(1, 3)
-
-    # Define different tasks
-    tasks = {
-        ChatWorkflow
-    }
-
-# Start Prometheus metrics server
-start_metrics_server()
+def start_metrics_server():
+    start_http_server(4000, addr='0.0.0.0') 
