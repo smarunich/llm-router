@@ -118,10 +118,10 @@ with gr.Blocks(theme=theme, css=css) as chat:
             value="triton"
         )
         policy_dropdown = gr.Dropdown(
-            choices=["task_router"],
             label="Select a Routing Policy",
             min_width=50,
             scale=1,
+            choices=["task_router", "complexity_router"], 
             value="task_router"
         )
         model_dropdown = gr.Dropdown(
