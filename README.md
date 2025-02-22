@@ -94,12 +94,12 @@ Use `$oauthtoken` as the username and the API key as the password.
 Using LLM router models used in blueprint:
 | GPU | Family | Memory | # of GPUs (min.) |
 | ------ | ------ | ------ | ------ |
-| V100 or newer | SXM or PCIe | 80GB | 1 |
+| V100 or newer | SXM or PCIe | 4GB | 1 |
 
 Using a custom LLM-router model not included in blueprint (requirements may vary based on customizations):
 | GPU | Family | Memory | # of GPUs (min.) |
 | ------ | ------ | ------ | ------ |
-| A100 or newer | SXM or PCIe | 80GB | 1 |
+| A10G or newer | SXM or PCIe | 24GB | 1 |
 
 ## Quickstart Guide
 
