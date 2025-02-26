@@ -33,7 +33,7 @@ The LLM Router has three components:
 - <b>Router Server</b> - is a service that classifies the user's prompt using a pre-trained model. In this blueprint, the router server is implemented as a NVIDIA Triton Inference Server with pre-trained router models based off of [`Nvidia/prompt-task-and-complexity-classifier`](https://huggingface.co/nvidia/prompt-task-and-complexity-classifier). The pre-trained router models are available on NGC.
 - <b>Downstream LLMs</b> - are the LLMs the prompt will be passed to, typically foundational LLMs. In this blueprint the downstream models are NVIDIA NIMs, specifically `meta/llama-3.1-70b-instruct`, `meta/llama-3.1-8b-instruct`, `mistralai/mixtral-8x22b-instruct-v0.1`, and `deepseek-ai/deepseek-r1`. Other LLMs are supported such as locally hosted NVIDIA NIMs or third party OpenAI compatible API endpoints.
 
-![architecture diagram](assets/llm-router-blueprint.jpg)
+![architecture diagram](assets/llm-router-blueprint.png)
 
 ## Target Audience 
 This blueprint is for: 
