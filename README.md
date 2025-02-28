@@ -1,5 +1,4 @@
-# NVIDIA AI Blueprint: LLM Router
-
+<h2><img align="center" src="https://github.com/user-attachments/assets/cbe0d62f-c856-4e0b-b3ee-6184b7c4d96f">NVIDIA AI Blueprint: LLM Router</h2>
 ## Overview
 
 Ever struggled to decide which LLM to use for a specific task? In an ideal world the most accurate LLM would also be the cheapest and fastest, but in practice modern agentic AI systems have to make trade-offs between accuracy, speed, and cost.
@@ -24,6 +23,26 @@ The key features of the LLM Router framework are:
 - Flexible: use the default policy and router, or create your own policy and fine tune a router. We expect additional trained routers to be available from the community as well.
 - Configurable: easily configure which backend models are available. 
 - Performant: LLM Router uses Rust and NVIDIA Triton Inference Server to add minimal latency compared to routing requests directly to a model.
+
+## Quickstart Guide
+
+After meeting the pre-requisites follow these steps.
+
+#### 1. Install necessary python libraries
+
+Create and activate a Python virtual environment, then run: 
+
+```
+pip install -r requirements.txt
+```
+
+#### 2. Access Jupyter Notebook
+
+Bring up Jupyter and open the notebook in the `launchable` directory called `1_Deploy_LLM_Router.ipynb`.
+
+```
+jupyter --no-browser --ip 0.0.0.0 --NotebookApp.token=’’
+```
 
 
 ## Software Components 
@@ -81,7 +100,7 @@ Use `$oauthtoken` as the username and the API key as the password.
 
 2. NVIDIA API Catalog key
 
-- Navigate to **[NVIDIA API Catalog](https://build.nvidia.com/explore/discover). 
+- Navigate to [NVIDIA API Catalog](https://build.nvidia.com/explore/discover). 
 - Click one of the models, such as llama3-8b-instruct. 
 - Select the "Docker" input option. 
 - Click "Get API Key".
@@ -100,26 +119,6 @@ Using a custom LLM-router model not included in blueprint (requirements may vary
 | GPU | Family | Memory | # of GPUs (min.) |
 | ------ | ------ | ------ | ------ |
 | A10G or newer | SXM or PCIe | 24GB | 1 |
-
-## Quickstart Guide
-
-After meeting the pre-requisites follow these steps.
-
-#### 1. Install necessary python libraries
-
-Create and activate a Python virtual environment, then run: 
-
-```
-pip install -r requirements.txt
-```
-
-#### 3. Access Jupyter Notebook
-
-Bring up Jupyter and open the notebook in the `launchable` direcotry called `1_Deploy_LLM_Router.ipynb`.
-
-```
-jupyter --no-browser --ip 0.0.0.0 --NotebookApp.token=’’
-```
 
 ## Understand the blueprint
 
