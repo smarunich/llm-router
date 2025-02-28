@@ -11,10 +11,10 @@ download:
 	else \
   		echo "NGC_CLI_API_KEY environment variable is set."; \
 	fi 
-	ngc-cli/ngc registry model download-version "nvidian/task-llm-router:v1"
-	ngc-cli/ngc registry model download-version "nvidian/complexity-llm-router:v1"
-	cp -r task-llm-router_vv1/* routers/
-	cp -r complexity-llm-router_vv1/* routers/
+	ngc-cli/ngc registry model download-version "nvidia/nemo/prompt-task-and-complexity-classifier:task-llm-router"
+	ngc-cli/ngc registry model download-version "nvidia/nemo/prompt-task-and-complexity-classifier:complexity-llm-router"
+	cp -r prompt-task-and-complexity-classifier_vtask-llm-router/* routers/
+	cp -r prompt-task-and-complexity-classifier_vcomplexity-llm-router/* routers/
 	echo "Models downloaded and stored in routers directory successfully."
 
 up:
