@@ -1,4 +1,5 @@
 <h2><img align="center" src="https://github.com/user-attachments/assets/cbe0d62f-c856-4e0b-b3ee-6184b7c4d96f">NVIDIA AI Blueprint: LLM Router</h2>
+
 ## Overview
 
 Ever struggled to decide which LLM to use for a specific task? In an ideal world the most accurate LLM would also be the cheapest and fastest, but in practice modern agentic AI systems have to make trade-offs between accuracy, speed, and cost.
@@ -258,6 +259,10 @@ The blueprint includes a variety of tools to help understand, evaluate, customiz
 - Metrics are automatically collected and can be exported via Prometheus to Grafana. Details are available in the source README and an example is provided in the quickstart notebook.
 - A sample loadtest is available in the `demo/loadtest` folder with instructions in the associated README.
 - The blueprint includes two default routing policies available for download from NGC. The `customize` directory includes two notebooks showing how each policy model was created. There is also an example notebook showing how to create a third policy. The `intent_router` is created by fine-tuning a model to classify prompts based on a user's intent, assuming they are interacting with a support chatbot at a bank.
+
+## License 3<sup>rd</sup> Party
+
+This project will download and install additional third-party open source software projects. Review the license terms of these open source projects before use.
 
 ## Security Considerations
 
