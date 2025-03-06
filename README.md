@@ -42,7 +42,7 @@ pip install -r requirements.txt
 Bring up Jupyter and open the notebook in the `launchable` directory called `1_Deploy_LLM_Router.ipynb`.
 
 ```
-jupyter --no-browser --ip 0.0.0.0 --NotebookApp.token=’’
+jupyter lab --no-browser --ip 0.0.0.0 --NotebookApp.token=’’
 ```
 
 

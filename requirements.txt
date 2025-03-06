@@ -3,4 +3,4 @@ tritonclient[http]
 numpy
 transformers
 pyyaml
-jupyter
+jupyterlab
