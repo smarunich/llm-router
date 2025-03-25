@@ -21,7 +21,7 @@ policies:
       - name: Code Generation
         api_base: https://integrate.api.nvidia.com
         api_key: 
-        model: nvidia/llama-3_3-nemotron-super-49b-v1
+        model: nvidia/llama-3.3-nemotron-super-49b-v1
       - name: Extraction
         api_base: https://integrate.api.nvidia.com
         api_key: 
@@ -60,7 +60,7 @@ policies:
       - name: Reasoning
         api_base: https://integrate.api.nvidia.com
         api_key: 
-        model: nvidia/llama-3_3-nemotron-super-49b-v1
+        model: nvidia/llama-3.3-nemotron-super-49b-v1
       - name: Contextual-Knowledge
         api_base: https://integrate.api.nvidia.com
         api_key: 

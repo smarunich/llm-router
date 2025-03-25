@@ -51,7 +51,7 @@ jupyter lab --no-browser --ip 0.0.0.0 --NotebookApp.token=’’
 The LLM Router has three components: 
 - <b>Router Controller</b> - is a service similar to a proxy that routes OpenAI compatible requests. The controller is implemented as a Rust proxy and the code is available in `src/router-controller`.
 - <b>Router Server</b> - is a service that classifies the user's prompt using a pre-trained model. In this blueprint, the router server is implemented as a NVIDIA Triton Inference Server with pre-trained router models based off of [`Nvidia/prompt-task-and-complexity-classifier`](https://huggingface.co/nvidia/prompt-task-and-complexity-classifier). The pre-trained router models are available on NGC.
-- <b>Downstream LLMs</b> - are the LLMs the prompt will be passed to, typically foundational LLMs. In this blueprint the downstream models are NVIDIA NIMs, specifically `meta/llama-3.1-70b-instruct`, `meta/llama-3.1-8b-instruct`, `mistralai/mixtral-8x22b-instruct-v0.1`, and `nvidia/llama-3_3-nemotron-super-49b-v1`. Other LLMs are supported such as locally hosted NVIDIA NIMs or third party OpenAI compatible API endpoints.
+- <b>Downstream LLMs</b> - are the LLMs the prompt will be passed to, typically foundational LLMs. In this blueprint the downstream models are NVIDIA NIMs, specifically `meta/llama-3.1-70b-instruct`, `meta/llama-3.1-8b-instruct`, `mistralai/mixtral-8x22b-instruct-v0.1`, and `nvidia/llama-3.3-nemotron-super-49b-v1`. Other LLMs are supported such as locally hosted NVIDIA NIMs or third party OpenAI compatible API endpoints.
 
 ![architecture diagram](assets/llm-router-blueprint.png)
 
@@ -155,7 +155,7 @@ policies:
       - name: Reasoning
         api_base: https://integrate.api.nvidia.com
         api_key: 
-        model: nvidia/llama-3_3-nemotron-super-49b-v1
+        model: nvidia/llama-3.3-nemotron-super-49b-v1
     ...
 ```
 
